@@ -35,9 +35,8 @@ PREREQUISITES = [
     "درصد و کاربردهای آن"
 ]
 
-@app.before_first_request
 def create_tables():
-    """Initialize database tables on first request"""
+    """Initialize database tables and sample data"""
     db.create_all()
     
     # Add sample video links if not exist
@@ -55,6 +54,10 @@ def create_tables():
             db.session.add(video)
         
         db.session.commit()
+
+# Initialize database tables and sample data
+with app.app_context():
+    create_tables()
 
 # Student Routes
 @app.route('/')
@@ -328,6 +331,4 @@ def admin_generate_questions():
         return jsonify({'success': False, 'error': 'خطای سرور'})
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(host='0.0.0.0', port=5000, debug=True)
