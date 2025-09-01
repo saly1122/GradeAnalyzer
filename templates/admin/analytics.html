@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}تحلیل سوالات - MathBoost Analyzer{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg bg-dark navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-chart-line me-2"></i>پنل مدیریت
+        </a>
+        
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
+                <i class="fas fa-tachometer-alt me-1"></i>داشبورد
+            </a>
+            <a class="nav-link active" href="{{ url_for('admin_analytics') }}">
+                <i class="fas fa-analytics me-1"></i>تحلیل سوالات
+            </a>
+            <a class="nav-link" href="{{ url_for('admin_videos') }}">
+                <i class="fas fa-video me-1"></i>مدیریت ویدیوها
+            </a>
+            <a class="nav-link" href="{{ url_for('admin_logout') }}">
+                <i class="fas fa-sign-out-alt me-1"></i>خروج
+            </a>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>
+                <i class="fas fa-chart-bar me-2"></i>تحلیل کیفیت سوالات
+            </h2>
+            <p class="text-muted">این صفحه آمارهای دقیق کیفیت هر سوال را نمایش می‌دهد تا بتوانید سوالات بهتر را شناسایی کنید.</p>
+        </div>
+    </div>
+    
+    <!-- Quality Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title">سوالات عالی</h6>
+                            <h4 class="mb-0">{{ questions|selectattr('avg_discrimination_index', '>=', 0.4)|list|length }}</h4>
+                            <small>شاخص تمایز ≥ 0.4</small>
+                        </div>
+                        <div>
+                            <i class="fas fa-star fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title">سوالات قابل قبول</h6>
+                            <h4 class="mb-0">{{ questions|selectattr('avg_discrimination_index', '>=', 0.2)|selectattr('avg_discrimination_index', '<', 0.4)|list|length }}</h4>
+                            <small>0.2 ≤ شاخص تمایز < 0.4</small>
+                        </div>
+                        <div>
+                            <i class="fas fa-star-half-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title">سوالات ضعیف</h6>
+                            <h4 class="mb-0">{{ questions|selectattr('avg_discrimination_index', '<', 0.2)|list|length }}</h4>
+                            <small>شاخص تمایز < 0.2</small>
+                        </div>
+                        <div>
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title">کل سوالات</h6>
+                            <h4 class="mb-0">{{ questions|length }}</h4>
+                            <small>در بانک سوالات</small>
+                        </div>
+                        <div>
+                            <i class="fas fa-list-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Questions Analysis Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-table me-2"></i>جدول تحلیل سوالات
+            </h5>
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="sortTable('discrimination')">
+                    <i class="fas fa-sort me-1"></i>مرتب‌سازی بر اساس تمایز
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="sortTable('difficulty')">
+                    <i class="fas fa-sort me-1"></i>مرتب‌سازی بر اساس سختی
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if questions %}
+            <div class="table-responsive">
+                <table id="questions-table" class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ردیف</th>
+                            <th>پیش‌نیاز</th>
+                            <th>سطح سختی</th>
+                            <th>متن سوال</th>
+                            <th>پاسخ صحیح</th>
+                            <th>تعداد استفاده</th>
+                            <th>درصد سختی</th>
+                            <th>شاخص تمایز</th>
+                            <th>کیفیت</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for question in questions %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>
+                                <span class="badge bg-secondary">{{ question.prerequisite_name }}</span>
+                            </td>
+                            <td>
+                                <span class="badge 
+                                    {% if question.difficulty_level == 'easy' %}bg-success
+                                    {% elif question.difficulty_level == 'medium' %}bg-warning
+                                    {% else %}bg-danger
+                                    {% endif %}">
+                                    {% if question.difficulty_level == 'easy' %}آسان
+                                    {% elif question.difficulty_level == 'medium' %}متوسط
+                                    {% else %}سخت
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="question-text" style="max-width: 300px;">
+                                    {{ question.question_text }}
+                                </div>
+                            </td>
+                            <td>
+                                <code>{{ question.correct_answer }}</code>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ question.times_used }}</span>
+                            </td>
+                            <td>
+                                <div class="text-center">
+                                    <div class="progress" style="height: 20px; width: 80px;">
+                                        <div class="progress-bar bg-primary" 
+                                             role="progressbar" 
+                                             style="width: {{ question.avg_difficulty_percent or 0 }}%">
+                                            {{ question.avg_difficulty_percent }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge fs-6
+                                    {% if question.avg_discrimination_index >= 0.4 %}bg-success
+                                    {% elif question.avg_discrimination_index >= 0.2 %}bg-warning
+                                    {% elif question.avg_discrimination_index %}bg-danger
+                                    {% else %}bg-secondary
+                                    {% endif %}">
+                                    {{ question.avg_discrimination_index or 'محاسبه نشده' }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if question.avg_discrimination_index >= 0.4 %}
+                                    <i class="fas fa-star text-success" title="عالی"></i>
+                                    <span class="text-success">عالی</span>
+                                {% elif question.avg_discrimination_index >= 0.2 %}
+                                    <i class="fas fa-star-half-alt text-warning" title="قابل قبول"></i>
+                                    <span class="text-warning">قابل قبول</span>
+                                {% elif question.avg_discrimination_index %}
+                                    <i class="fas fa-exclamation-triangle text-danger" title="ضعیف"></i>
+                                    <span class="text-danger">ضعیف</span>
+                                {% else %}
+                                    <i class="fas fa-clock text-muted" title="منتظر داده"></i>
+                                    <span class="text-muted">منتظر داده</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">هنوز سوالی تولید نشده است</h5>
+                <p class="text-muted">زمانی که دانش‌آموزان شروع به آزمون کنند، سوالات جدید تولید و در اینجا نمایش داده خواهند شد.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Info Panel -->
+    <div class="row mt-4">
+        <div class="col">
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-info-circle me-2"></i>راهنمای تفسیر آمارها
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>درصد سختی:</strong> درصد دانش‌آموزانی که به سوال پاسخ درست داده‌اند</p>
+                            <p class="mb-2"><strong>شاخص تمایز:</strong> توانایی سوال در تشخیص دانش‌آموزان قوی از ضعیف</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><span class="badge bg-success">عالی:</span> شاخص تمایز ≥ 0.4</p>
+                            <p class="mb-2"><span class="badge bg-warning">قابل قبول:</span> 0.2 ≤ شاخص تمایز < 0.4</p>
+                            <p class="mb-0"><span class="badge bg-danger">ضعیف:</span> شاخص تمایز < 0.2</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script>
+    // Re-render MathJax for dynamic content
+    if (window.MathJax) {
+        MathJax.typesetPromise();
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}پنل مدیریت - MathBoost Analyzer{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg bg-dark navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-chart-line me-2"></i>پنل مدیریت
+        </a>
+        
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
+                <i class="fas fa-tachometer-alt me-1"></i>داشبورد
+            </a>
+            <a class="nav-link" href="{{ url_for('admin_analytics') }}">
+                <i class="fas fa-analytics me-1"></i>تحلیل سوالات
+            </a>
+            <a class="nav-link" href="{{ url_for('admin_videos') }}">
+                <i class="fas fa-video me-1"></i>مدیریت ویدیوها
+            </a>
+            <a class="nav-link" href="{{ url_for('admin_logout') }}">
+                <i class="fas fa-sign-out-alt me-1"></i>خروج
+            </a>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>
+                <i class="fas fa-users me-2"></i>گزارش عملکرد دانش‌آموزان
+            </h2>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5 class="card-title">کل دانش‌آموزان</h5>
+                            <h3 class="mb-0">{{ students|length }}</h3>
+                        </div>
+                        <div>
+                            <i class="fas fa-user-graduate fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5 class="card-title">میانگین نمرات</h5>
+                            <h3 class="mb-0">
+                                {% if students %}
+                                    {{ "%.1f"|format(students|map(attribute='percentage')|list|sum / students|length) }}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <div>
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Students Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-table me-2"></i>جدول نتایج دانش‌آموزان
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if students %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ردیف</th>
+                            <th>نام دانش‌آموز</th>
+                            <th>پایه</th>
+                            <th>زمان شروع</th>
+                            <th>کل سوالات</th>
+                            <th>پاسخ‌های صحیح</th>
+                            <th>درصد</th>
+                            <th>وضعیت</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>
+                                <i class="fas fa-user me-2"></i>{{ student.name }}
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ student.grade }}</span>
+                            </td>
+                            <td>{{ student.start_time }}</td>
+                            <td>{{ student.total_questions }}</td>
+                            <td>{{ student.correct_answers }}</td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar 
+                                        {% if student.percentage >= 80 %}bg-success
+                                        {% elif student.percentage >= 60 %}bg-warning
+                                        {% else %}bg-danger
+                                        {% endif %}" 
+                                         role="progressbar" 
+                                         style="width: {{ student.percentage }}%"
+                                         aria-valuenow="{{ student.percentage }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        {{ student.percentage }}%
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if student.percentage >= 80 %}
+                                    <span class="badge bg-success">عالی</span>
+                                {% elif student.percentage >= 60 %}
+                                    <span class="badge bg-warning">متوسط</span>
+                                {% else %}
+                                    <span class="badge bg-danger">نیاز به تمرین</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-users-slash fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">هنوز دانش‌آموزی آزمون نداده است</h5>
+                <p class="text-muted">زمانی که دانش‌آموزان شروع به آزمون کردن، نتایج آن‌ها در اینجا نمایش داده خواهد شد.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

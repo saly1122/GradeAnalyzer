@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}آزمون تشخیصی ریاضی - MathBoost Analyzer{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Welcome Section -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-calculator fa-3x text-primary mb-3"></i>
+                    <h1 class="card-title h2 mb-3">آزمون تشخیصی ریاضی</h1>
+                    <p class="card-text text-muted">
+                        این آزمون برای سنجش میزان تسلط شما بر پیش‌نیازهای ریاضی طراحی شده است.
+                        نتایج این آزمون به شما کمک می‌کند تا نقاط قوت و ضعف خود را شناسایی کنید.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Student Information Form -->
+            <div id="student-form" class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-user me-2"></i>اطلاعات شخصی
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form id="start-session-form">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="student-name" class="form-label">نام و نام خانوادگی</label>
+                                <input type="text" class="form-control" id="student-name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="student-grade" class="form-label">پایه تحصیلی</label>
+                                <select class="form-select" id="student-grade" required>
+                                    <option value="">انتخاب کنید</option>
+                                    <option value="چهارم">چهارم</option>
+                                    <option value="پنجم">پنجم</option>
+                                    <option value="ششم">ششم</option>
+                                    <option value="هفتم">هفتم</option>
+                                    <option value="هشتم">هشتم</option>
+                                    <option value="نهم">نهم</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-play me-2"></i>شروع آزمون
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Question Section (hidden initially) -->
+            <div id="question-section" class="card border-0 shadow-sm" style="display: none;">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="card-title mb-0">
+                            <i class="fas fa-question-circle me-2"></i>سوال
+                        </h3>
+                        <div class="badge bg-light text-dark fs-6">
+                            سوال <span id="question-number">1</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-3">پیش‌نیاز: <span id="prerequisite-name"></span></h5>
+                        <div id="question-text" class="fs-5 mb-4"></div>
+                    </div>
+                    
+                    <form id="answer-form">
+                        <div class="row align-items-end">
+                            <div class="col-md-8 mb-3">
+                                <label for="student-answer" class="form-label">پاسخ شما:</label>
+                                <input type="text" class="form-control form-control-lg" id="student-answer" 
+                                       placeholder="پاسخ خود را وارد کنید" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <button type="submit" class="btn btn-success btn-lg w-100">
+                                    <i class="fas fa-paper-plane me-2"></i>ارسال پاسخ
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Feedback Section (hidden initially) -->
+            <div id="feedback-section" class="card border-0 shadow-sm mt-3" style="display: none;">
+                <div class="card-body text-center">
+                    <div id="feedback-content"></div>
+                    <button id="next-question-btn" class="btn btn-outline-primary mt-3">
+                        <i class="fas fa-arrow-left me-2"></i>سوال بعدی
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Section (hidden initially) -->
+            <div id="results-section" class="card border-0 shadow-sm" style="display: none;">
+                <div class="card-header bg-success text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-trophy me-2"></i>نتایج آزمون
+                    </h3>
+                </div>
+                <div class="card-body text-center">
+                    <div id="final-score" class="mb-4"></div>
+                    <div class="row text-center">
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="text-success">
+                                        <i class="fas fa-check-circle me-2"></i>پاسخ‌های صحیح
+                                    </h5>
+                                    <h2 class="text-success" id="correct-answers">0</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="text-info">
+                                        <i class="fas fa-list-alt me-2"></i>کل سوالات
+                                    </h5>
+                                    <h2 class="text-info" id="total-questions">0</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button onclick="location.reload()" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-redo me-2"></i>آزمون مجدد
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="loading" class="text-center py-4" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">در حال بارگذاری...</span>
+                </div>
+                <p class="mt-2 text-muted">لطفا کمی صبر کنید...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/student.js') }}"></script>
+{% endblock %}
