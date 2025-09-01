@@ -1,29 +1,63 @@
 {% extends "base.html" %}
 
-{% block title %}آزمون تشخیصی ریاضی - MathBoost Analyzer{% endblock %}
+{% block title %}سامانه آزمون تشخیصی ریاضی - MathBoost Analyzer{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-10">
             <!-- Welcome Section -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body text-center py-5">
-                    <i class="fas fa-calculator fa-3x text-primary mb-3"></i>
-                    <h1 class="card-title h2 mb-3">آزمون تشخیصی ریاضی</h1>
-                    <p class="card-text text-muted">
-                        این آزمون برای سنجش میزان تسلط شما بر پیش‌نیازهای ریاضی طراحی شده است.
-                        نتایج این آزمون به شما کمک می‌کند تا نقاط قوت و ضعف خود را شناسایی کنید.
-                    </p>
+            <div class="text-center mb-5">
+                <h1 class="main-title mb-3">سامانه آزمون تشخیصی ریاضی</h1>
+                <p class="lead text-muted">
+                    دانشگاه فرهنگیان - سنجش پیش‌نیازهای ریاضی دانش‌آموزان
+                </p>
+            </div>
+
+            <!-- Main Selection Cards -->
+            <div class="row">
+                <!-- Student Portal -->
+                <div class="col-md-6 mb-4">
+                    <div class="portal-card student-portal">
+                        <div class="portal-icon">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <h3 class="portal-title">ورود دانش‌آموز</h3>
+                        <p class="portal-description">
+                            شرکت در آزمون تشخیصی ریاضی و ارزیابی میزان تسلط بر پیش‌نیازها
+                        </p>
+                        <button class="btn btn-portal-student" onclick="showStudentForm()">
+                            <i class="fas fa-play me-2"></i>شروع آزمون
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Admin Portal -->
+                <div class="col-md-6 mb-4">
+                    <div class="portal-card admin-portal">
+                        <div class="portal-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <h3 class="portal-title">ورود مدیر</h3>
+                        <p class="portal-description">
+                            مدیریت سیستم، مشاهده آمارها و تحلیل عملکرد دانش‌آموزان
+                        </p>
+                        <a href="{{ url_for('admin_login') }}" class="btn btn-portal-admin">
+                            <i class="fas fa-sign-in-alt me-2"></i>ورود به پنل مدیریت
+                        </a>
+                    </div>
                 </div>
             </div>
 
-            <!-- Student Information Form -->
-            <div id="student-form" class="card border-0 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="card-title mb-0">
-                        <i class="fas fa-user me-2"></i>اطلاعات شخصی
-                    </h3>
+            <!-- Student Information Form (hidden initially) -->
+            <div id="student-form" class="card border-0 shadow-sm" style="display: none;">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="card-title mb-0">
+                            <i class="fas fa-user me-2"></i>اطلاعات شخصی
+                        </h3>
+                        <button type="button" class="btn-close" onclick="hideStudentForm()"></button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <form id="start-session-form">
@@ -45,8 +79,11 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="button" class="btn btn-secondary me-md-2" onclick="hideStudentForm()">
+                                <i class="fas fa-arrow-right me-2"></i>بازگشت
+                            </button>
+                            <button type="submit" class="btn btn-accent">
                                 <i class="fas fa-play me-2"></i>شروع آزمون
                             </button>
                         </div>

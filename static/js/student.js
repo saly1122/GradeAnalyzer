@@ -282,6 +282,16 @@ class StudentAssessment {
     }
 }
 
+// Portal Functions
+function showStudentForm() {
+    document.getElementById('student-form').style.display = 'block';
+    document.getElementById('student-form').scrollIntoView({ behavior: 'smooth' });
+}
+
+function hideStudentForm() {
+    document.getElementById('student-form').style.display = 'none';
+}
+
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new StudentAssessment();

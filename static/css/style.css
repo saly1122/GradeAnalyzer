@@ -1,14 +1,255 @@
-/* RTL Support and Custom Styles */
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    direction: rtl;
-    text-align: right;
+/* 
+ * MathBoost Analyzer - UI/UX Design System
+ * دانشگاه فرهنگیان - طراحی بر اساس راهنمای هویت بصری
+ */
+
+/* Custom CSS Variables - Color Palette */
+:root {
+    /* Primary Colors */
+    --primary-color: #1a5276;
+    --accent-color: #d35400;
+    
+    /* Status Colors */
+    --success-color: #27ae60;
+    --danger-color: #c0392b;
+    --warning-color: #f39c12;
+    --info-color: #2980b9;
+    
+    /* Neutral Colors */
+    --background-main: #ecf0f1;
+    --background-card: #ffffff;
+    --text-primary: #34495e;
+    --border-color: #bdc3c7;
+    
+    /* Typography */
+    --font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+    --font-size-base: 16px;
+    --line-height-base: 1.7;
 }
 
-/* Custom styling for Persian text */
-.persian-text {
-    font-family: 'B Yekan', 'Tahoma', sans-serif;
+/* Global Styles */
+body {
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    direction: rtl;
+    text-align: right;
+    background-color: var(--background-main);
+    color: var(--text-primary);
+}
+
+/* Typography Hierarchy */
+.main-title {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+h1, h2 {
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+h3, h4 {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Portal Cards Design */
+.portal-card {
+    background: var(--background-card);
+    border-radius: 12px;
+    padding: 2.5rem;
+    text-align: center;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    height: 100%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.portal-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.student-portal {
+    border-color: var(--info-color);
+}
+
+.student-portal:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 8px 25px rgba(26, 82, 118, 0.2);
+}
+
+.admin-portal {
+    border-color: var(--accent-color);
+}
+
+.admin-portal:hover {
+    border-color: var(--danger-color);
+    box-shadow: 0 8px 25px rgba(211, 84, 0, 0.2);
+}
+
+.portal-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+}
+
+.admin-portal .portal-icon {
+    color: var(--accent-color);
+}
+
+.portal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.portal-description {
+    color: #7f8c8d;
+    margin-bottom: 2rem;
     line-height: 1.6;
+}
+
+/* Button Styles */
+.btn {
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-weight: 500;
+    font-family: var(--font-family);
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-portal-student {
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 1.1rem;
+    padding: 15px 30px;
+}
+
+.btn-portal-student:hover {
+    background-color: #145a7a;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-portal-admin {
+    background-color: var(--accent-color);
+    color: white;
+    font-size: 1.1rem;
+    padding: 15px 30px;
+    text-decoration: none;
+}
+
+.btn-portal-admin:hover {
+    background-color: #b8440e;
+    color: white;
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+
+.btn-accent {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.btn-accent:hover {
+    background-color: #b8440e;
+    color: white;
+}
+
+/* Card Improvements */
+.card {
+    background: var(--background-card);
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 12px 12px 0 0 !important;
+    border: none;
+    padding: 1.25rem 1.5rem;
+}
+
+.card-title {
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+/* Form Styling */
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    padding: 12px 16px;
+    font-family: var(--font-family);
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(26, 82, 118, 0.25);
+}
+
+.form-label {
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+/* Status Colors Implementation */
+.bg-success, .btn-success {
+    background-color: var(--success-color) !important;
+}
+
+.bg-danger, .btn-danger {
+    background-color: var(--danger-color) !important;
+}
+
+.bg-warning, .btn-warning {
+    background-color: var(--warning-color) !important;
+}
+
+.bg-info, .btn-info {
+    background-color: var(--info-color) !important;
+}
+
+.text-success {
+    color: var(--success-color) !important;
+}
+
+.text-danger {
+    color: var(--danger-color) !important;
+}
+
+.text-warning {
+    color: var(--warning-color) !important;
+}
+
+.text-info {
+    color: var(--info-color) !important;
+}
+
+/* Question Text Styling */
+.question-text {
+    line-height: 1.8;
+    font-size: 1.1em;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-right: 4px solid var(--primary-color);
+    margin-bottom: 1rem;
 }
 
 /* Mathematical expressions styling */
@@ -16,36 +257,25 @@ body {
     font-size: 1.1em !important;
 }
 
-/* Question text styling */
-.question-text {
-    line-height: 1.8;
-    font-size: 1.1em;
-    padding: 15px;
-    background-color: var(--bs-light);
-    border-radius: 8px;
-    border-right: 4px solid var(--bs-primary);
-}
-
-/* Progress bars with better visibility */
+/* Progress bars */
 .progress {
-    background-color: var(--bs-gray-300);
+    background-color: #e9ecef;
     border-radius: 10px;
+    height: 20px;
 }
 
 .progress-bar {
     border-radius: 10px;
-    font-weight: bold;
+    font-weight: 500;
     font-size: 0.85em;
 }
 
-/* Cards with better spacing */
-.card {
-    border-radius: 12px;
-    transition: box-shadow 0.3s ease;
-}
-
-.card:hover {
-    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15) !important;
+/* Badge styling */
+.badge {
+    font-size: 0.85em;
+    padding: 0.5em 0.8em;
+    border-radius: 20px;
+    font-weight: 500;
 }
 
 /* Table improvements */
@@ -54,70 +284,25 @@ body {
 }
 
 .table thead th {
-    border-bottom: 2px solid var(--bs-gray-400);
+    border-bottom: 2px solid var(--border-color);
     font-weight: 600;
+    background-color: var(--primary-color);
+    color: white;
     text-transform: uppercase;
     font-size: 0.85em;
     letter-spacing: 0.5px;
 }
 
-/* Badge styling */
-.badge {
-    font-size: 0.85em;
-    padding: 0.5em 0.8em;
-    border-radius: 20px;
+.table-hover tbody tr:hover {
+    background-color: rgba(26, 82, 118, 0.05);
 }
 
-/* Form improvements */
-.form-control, .form-select {
+/* Alert improvements */
+.alert {
     border-radius: 8px;
-    border: 2px solid var(--bs-gray-300);
-    padding: 12px 16px;
-    transition: all 0.3s ease;
-}
-
-.form-control:focus, .form-select:focus {
-    border-color: var(--bs-primary);
-    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
-}
-
-/* Button improvements */
-.btn {
-    border-radius: 8px;
-    padding: 10px 20px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.btn-lg {
-    padding: 15px 30px;
-    font-size: 1.1em;
-}
-
-/* Loading spinner */
-.spinner-border {
-    width: 3rem;
-    height: 3rem;
-}
-
-/* Responsive improvements */
-@media (max-width: 768px) {
-    .card-body {
-        padding: 1rem;
-    }
-    
-    .table-responsive {
-        font-size: 0.85em;
-    }
-    
-    .btn-group {
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .btn-group .btn {
-        margin-bottom: 5px;
-    }
+    border: none;
+    padding: 15px 20px;
+    font-family: var(--font-family);
 }
 
 /* Animation for feedback */
@@ -136,50 +321,70 @@ body {
     }
 }
 
-/* Custom alert styling */
-.alert {
-    border-radius: 8px;
-    border: none;
-    padding: 15px 20px;
+/* Loading spinner */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+    color: var(--primary-color);
 }
 
-/* Navbar improvements */
+/* Navbar styling */
 .navbar-brand {
     font-weight: 600;
     font-size: 1.3em;
+    color: white !important;
 }
 
-/* Statistics cards */
-.card.bg-primary,
-.card.bg-success,
-.card.bg-warning,
-.card.bg-danger,
-.card.bg-info {
-    border: none;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+.navbar-dark {
+    background-color: var(--primary-color) !important;
 }
 
-/* Quality indicators */
-.quality-excellent {
-    color: var(--bs-success) !important;
-}
-
-.quality-acceptable {
-    color: var(--bs-warning) !important;
-}
-
-.quality-poor {
-    color: var(--bs-danger) !important;
-}
-
-/* Table row hover effect */
-.table-hover tbody tr:hover {
-    background-color: rgba(var(--bs-primary-rgb), 0.05);
-}
-
-/* Icon spacing */
+/* Icon spacing for RTL */
 .fas, .fab {
-    margin-left: 5px;
+    margin-left: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-title {
+        font-size: 2rem;
+    }
+    
+    .portal-card {
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .portal-icon {
+        font-size: 3rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.85em;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 5px;
+    }
+}
+
+@media (max-width: 576px) {
+    .portal-card {
+        padding: 1.5rem;
+    }
+    
+    .main-title {
+        font-size: 1.75rem;
+    }
 }
 
 /* Custom scrollbar for webkit browsers */
@@ -189,15 +394,25 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--bs-gray-200);
+    background: var(--border-color);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--bs-gray-400);
+    background: var(--primary-color);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--bs-gray-500);
+    background: #145a7a;
+}
+
+/* Additional utility classes */
+.text-muted {
+    color: #7f8c8d !important;
+}
+
+.lead {
+    font-size: 1.25rem;
+    font-weight: 400;
 }
