@@ -1,0 +1,215 @@
+مستند جامع توسعه پروژه: MathBoost Analyzer
+نسخه: ۱.۰
+تاریخ: ۱ سپتامبر ۲۰۲۵
+
+۱. معرفی و چشم‌انداز پروژه
+MathBoost Analyzer یک پلتفرم وب هوشمند برای آموزش تطبیقی و تحلیل آزمون‌های تشخیصی در حوزه ریاضیات است. این سیستم با هدف پیاده‌سازی یک چرخه کامل و خودکار طراحی، اجرا، تحلیل و بهبود آزمون‌ها توسعه می‌یابد و به عنوان یک ابزار قدرتمند برای تحقق اهداف پژوهشی در زمینه آموزش داده‌محور عمل می‌کند.
+
+۱.۱. اهداف اصلی
+برای دانش‌آموز: ارائه یک تجربه آزمون تشخیصی تعاملی، هوشمند و شخصی‌سازی شده.
+
+برای مدیر (معلم/پژوهشگر): فراهم کردن یک پنل مدیریت قدرتمند برای نظارت بر عملکرد دانش‌آموزان و از همه مهم‌تر، تحلیل کیفیت سوالات آزمون برای ایجاد یک حلقه بازخورد (Feedback Loop) و بهبود مستمر ابزار سنجش.
+
+۱.۲. جریان کاری کلی سیستم
+طراحی (Design): سیستم با استفاده از هوش مصنوعی (Google Gemini) سوالات تشخیصی جدیدی بر اساس پیش‌نیازهای درسی تعریف‌شده تولید کرده و آن‌ها را در یک "بانک سوالات" مرکزی ذخیره می‌کند.
+
+اجرا (Execute): دانش‌آموز وارد سیستم شده و یک آزمون را شروع می‌کند. سیستم به صورت هوشمند، مؤثرترین سوالات موجود در بانک سوالات را برای او انتخاب می‌کند.
+
+تحلیل (Analyze): پس از پاسخگویی دانش‌آموزان، سیستم به طور خودکار داده‌های عملکرد را جمع‌آوری کرده و معیارهای آماری کلیدی مانند درصد سختی و شاخص تمایز را برای هر سوال محاسبه می‌کند.
+
+بهبود (Improve): در آزمون‌های بعدی، سیستم به سوالاتی که بر اساس تحلیل‌ها کارایی بالاتری (شاخص تمایز بهتر) داشته‌اند، اولویت می‌دهد. این فرآیند باعث می‌شود آزمون به مرور زمان به یک ابزار سنجش دقیق‌تر و بهینه‌تر تبدیل شود.
+
+۲. معماری فنی و فناوری‌ها
+سمت سرور (Backend): Python 3.8+ با فریمورک Flask
+
+پایگاه داده (Database): SQLite (برای سادگی و قابلیت حمل)
+
+هوش مصنوعی (AI): Google Gemini API (مدل gemini-1.5-flash)
+
+سمت کاربر (Frontend): HTML5, CSS3, Vanilla JavaScript
+
+رندر عبارات ریاضی: کتابخانه MathJax 3
+
+کتابخانه‌های کلیدی پایتون: Flask, google-generativeai, python-dotenv, numpy
+
+۳. ساختار پایگاه داده (schema.sql)
+پایگاه داده قلب سیستم است و باید تمام داده‌های لازم برای تحلیل را ذخیره کند.
+
+-- schema.sql
+
+-- Drop existing tables to ensure a clean slate on initialization.
+DROP TABLE IF EXISTS student_answers;
+DROP TABLE IF EXISTS students;
+DROP TABLE IF EXISTS questions;
+DROP TABLE IF EXISTS prerequisite_videos;
+
+-- Table to store all generated questions, forming the "Question Bank".
+CREATE TABLE questions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    prerequisite_name TEXT NOT NULL,
+    difficulty_level TEXT NOT NULL, -- 'easy', 'medium', or 'hard'
+    question_text TEXT UNIQUE NOT NULL, -- Ensures no duplicate questions
+    correct_answer TEXT NOT NULL,
+    times_used INTEGER DEFAULT 0,
+    -- Analytical metrics calculated from student responses:
+    avg_difficulty_percent REAL, -- The percentage of students who answered correctly.
+    avg_discrimination_index REAL -- A value indicating how well the question differentiates high/low-scoring students.
+);
+
+-- Table to store information about each student session.
+CREATE TABLE students (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_name TEXT NOT NULL,
+    student_grade TEXT NOT NULL,
+    session_start_time TEXT NOT NULL
+);
+
+-- Table to log every single answer from every student.
+-- This is the raw data for all analytics.
+CREATE TABLE student_answers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    question_id INTEGER NOT NULL,
+    is_correct INTEGER NOT NULL, -- 1 for true, 0 for false
+    FOREIGN KEY (student_id) REFERENCES students (id),
+    FOREIGN KEY (question_id) REFERENCES questions (id)
+);
+
+-- Table to associate educational video links with prerequisites.
+CREATE TABLE prerequisite_videos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    prerequisite_name TEXT UNIQUE NOT NULL,
+    video_url TEXT
+);
+
+۴. منطق سمت سرور (app.py)
+فایل app.py شامل تمام منطق برنامه است.
+
+۴.۱. مسیرهای مربوط به دانش‌آموز (Student API)
+@app.route('/'): نمایش صفحه اصلی آزمون (index.html).
+
+POST /api/start_session:
+
+ورودی: { "name": "...", "grade": "..." }
+
+یک رکورد جدید در جدول students ایجاد می‌کند.
+
+student_id را در session کاربر ذخیره می‌کند.
+
+لیستی از پیش‌نیازهای آزمون را در session تعریف می‌کند.
+
+GET /api/get_question:
+
+بر اساس پیش‌نیاز فعلی دانش‌آموز، یک سوال از جدول questions انتخاب می‌کند.
+
+منطق انتخاب هوشمند: سوال باید با اولویت‌بندی بر اساس avg_discrimination_index (نزولی) و سپس times_used (صعودی) انتخاب شود تا بهترین و در عین حال کم‌استفاده‌ترین سوال نمایش داده شود.
+
+اگر سوالی برای پیش‌نیاز مورد نظر وجود نداشت، تابع تولید سوال با AI را فراخوانی می‌کند.
+
+question_id فعلی را در session ذخیره می‌کند.
+
+POST /api/submit_answer:
+
+ورودی: { "answer": "..." }
+
+پاسخ کاربر را با correct_answer از جدول questions مقایسه می‌کند.
+
+نتیجه را (صحیح/غلط) در جدول student_answers ثبت می‌کند.
+
+امتیاز کاربر را در session به‌روزرسانی می‌کند.
+
+پیش‌نیاز فعلی را به مورد بعدی تغییر می‌دهد.
+
+۴.۲. مسیرهای پنل مدیریت (Admin Panel)
+/admin/login: صفحه ورود مدیر.
+
+/admin/dashboard: نمایش نتایج کلی دانش‌آموزان (جدولی از جدول students).
+
+/admin/analytics:
+
+مهم‌ترین بخش: قبل از نمایش صفحه، تابع calculate_analytics() را فراخوانی می‌کند تا آمارها به‌روز شوند.
+
+تمام سوالات را از جدول questions خوانده و به admin_analytics.html ارسال می‌کند.
+
+قابلیت مرتب‌سازی جدول بر اساس ستون‌های مختلف (به خصوص avg_discrimination_index) را پیاده‌سازی می‌کند.
+
+/admin/videos: مدیریت لینک‌های ویدئویی.
+
+۴.۳. توابع اصلی و منطق تحلیل
+generate_questions_from_ai(prerequisite_name):
+
+یک prompt دقیق و ساختاریافته به Gemini API ارسال می‌کند و درخواست یک خروجی JSON با ۳ سطح سوال (آسان، متوسط، سخت) می‌کند.
+
+پاسخ JSON را تجزیه کرده و سوالات جدید را در جدول questions درج می‌کند.
+
+calculate_analytics():
+
+این تابع منطق اصلی برنامه GradeAnalyzerPro را پیاده‌سازی می‌کند.
+
+برای هر سوال در بانک سوالات، تمام پاسخ‌های مرتبط از student_answers را جمع‌آوری می‌کند.
+
+محاسبه درصد سختی: (تعداد پاسخ‌های صحیح / کل پاسخ‌ها) * 100
+
+محاسبه شاخص تمایز:
+
+امتیاز کل هر دانش‌آموز را محاسبه می‌کند (تعداد کل پاسخ‌های صحیح).
+
+دانش‌آموزان را بر اساس امتیاز کل مرتب می‌کند.
+
+دو گروه بالا (۲۷٪ برتر) و پایین (۲۷٪ پایین‌تر) را مشخص می‌کند.
+
+میانگین نمره گروه بالا در آن سوال خاص (Mean_Upper) را محاسبه می‌کند.
+
+میانگین نمره گروه پایین در آن سوال خاص (Mean_Lower) را محاسبه می‌کند.
+
+شاخص تمایز برابر است با: Mean_Upper - Mean_Lower.
+
+نتایج محاسبات را در ستون‌های avg_difficulty_percent و avg_discrimination_index جدول questions به‌روزرسانی می‌کند.
+
+۵. رابط کاربری (Frontend)
+۵.۱. صفحه دانش‌آموز (index.html)
+یک صفحه Single-Page Application (SPA): تمام تعاملات از طریق JavaScript و فراخوانی APIها انجام می‌شود.
+
+جریان کار:
+
+ابتدا فرم ورود اطلاعات نمایش داده می‌شود.
+
+پس از شروع جلسه، فرم مخفی شده و بخش آزمون نمایش داده می‌شود.
+
+یک حلقه تکرار می‌شود: دریافت سوال -> نمایش سوال (با رندر MathJax) -> دریافت پاسخ از کاربر -> ارسال پاسخ -> نمایش بازخورد (صحیح/غلط) -> درخواست سوال بعدی.
+
+پس از اتمام آزمون، بخش نتایج نهایی نمایش داده می‌شود.
+
+۵.۲. صفحات پنل مدیریت
+layout.html: یک قالب پایه با منوی ناوبری ثابت برای تمام صفحات ادمین.
+
+admin_analytics.html: مهم‌ترین صفحه که یک جدول بزرگ از سوالات و آمارهای تحلیلی آن‌ها را نمایش می‌دهد. ستون "شاخص تمایز" باید با رنگ‌های شرطی مشخص شود:
+
+عالی (>= 0.4): سبز
+
+قابل قبول (0.2 تا 0.39): زرد/نارنجی
+
+ضعیف (< 0.2): قرمز
+
+admin_dashboard.html: نمایش ساده و خوانا از عملکرد کلی دانش‌آموزان.
+
+۶. راهنمای راه‌اندازی و استقرار
+۶.۱. راه‌اندازی محلی (Local Setup)
+کلون کردن پروژه: git clone <repository_url>
+
+نصب وابستگی‌ها: pip install -r requirements.txt
+
+ایجاد فایل .env: یک فایل .env در ریشه پروژه بسازید و کلیدهای API و اطلاعات ادمین را در آن قرار دهید (بر اساس فایل README.md).
+
+اجرای برنامه: flask run (این دستور به طور خودکار پایگاه داده را در اولین اجرا ایجاد و مقداردهی اولیه می‌کند).
+
+۶.۲. استقرار (Deployment)
+برنامه برای استقرار روی سرویس‌های PaaS مانند Render آماده است.
+
+Build Command: pip install -r requirements.txt
+
+Start Command: gunicorn app:app
+
+متغیرهای محیطی: مقادیر موجود در فایل .env باید در بخش Environment Variables سرویس هاستینگ تنظیم شوند.
+
+این مستند تمام اطلاعات لازم برای ساخت و توسعه پروژه را پوشش می‌دهد.
