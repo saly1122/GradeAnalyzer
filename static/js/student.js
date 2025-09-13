@@ -74,7 +74,7 @@ class StudentAssessment {
             if (data.success) {
                 this.hideForm();
                 this.showQuestionSection();
-                this.getNextQuestion();
+                this.getNextQuestion(); 
             } else {
                 this.showAlert(data.error || 'خطا در شروع جلسه', 'danger');
             }
