@@ -15,8 +15,13 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "your-secret-key-here")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# Configure SQLite database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+# Configure PostgreSQL database
+database_url = os.environ.get('DATABASE_URL')
+if database_url:
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+else:
+    # Fallback to SQLite file for development
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/mathboost.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database

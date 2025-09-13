@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-from google import genai
+import google.genai as genai
 from google.genai import types
 from models import db, Question
 from pydantic import BaseModel
