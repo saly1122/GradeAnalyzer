@@ -256,13 +256,57 @@ class StudentAssessment {
         feedbackSection.classList.remove('feedback-animation');
     }
     
-    showResults(score, total) {
+    async showResults(score, total) {
         // Hide question section
         document.getElementById('question-section').style.display = 'none';
         this.hideFeedback();
         
-        // Show results
-        const resultsSection = document.getElementById('results-section');
+        try {
+            // Get detailed results from server
+            const response = await fetch('/api/get_results');
+            const data = await response.json();
+            
+            if (data.success) {
+                this.displayDetailedResults(data);
+            } else {
+                this.showAlert(data.error, 'danger');
+                this.displayBasicResults(score, total);
+            }
+        } catch (error) {
+            console.error('Error fetching results:', error);
+            this.displayBasicResults(score, total);
+        }
+        
+        document.getElementById('results-section').style.display = 'block';
+    }
+    
+    displayDetailedResults(data) {
+        const percentage = data.percentage;
+        
+        document.getElementById('final-score').innerHTML = `
+            <h2 class="mb-3">نمره نهایی شما: ${percentage}%</h2>
+            <p class="text-muted">شما ${data.score} سوال از ${data.attempted} سوال تلاش شده را درست پاسخ دادید</p>
+            <p class="text-muted small">کل سوالات: ${data.total} (شامل ${data.total - data.attempted} سوال "بلد نیستم")</p>
+        `;
+        
+        document.getElementById('correct-answers').textContent = data.score;
+        document.getElementById('total-questions').textContent = data.total;
+        
+        // Add detailed analysis table
+        const analysisHtml = this.createAnalysisTable(data.strengths, data.weaknesses);
+        document.getElementById('final-score').innerHTML += analysisHtml;
+        
+        // Add download button
+        document.getElementById('final-score').innerHTML += `
+            <div class="mt-4">
+                <button class="btn btn-primary" onclick="downloadResults()">
+                    <i class="fas fa-download me-2"></i>دانلود گزارش
+                </button>
+            </div>
+        `;
+    }
+    
+    displayBasicResults(score, total) {
         const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
         
         document.getElementById('final-score').innerHTML = `
@@ -272,8 +316,89 @@ class StudentAssessment {
         
         document.getElementById('correct-answers').textContent = score;
         document.getElementById('total-questions').textContent = total;
+    }
+    
+    createAnalysisTable(strengths, weaknesses) {
+        let html = '<div class="mt-4">';
         
-        resultsSection.style.display = 'block';
+        // Strengths section
+        if (strengths.length > 0) {
+            html += `
+                <h4 class="text-success mb-3">
+                    <i class="fas fa-check-circle me-2"></i>نقاط قوت شما
+                </h4>
+                <div class="table-responsive mb-4">
+                    <table class="table table-success table-striped">
+                        <thead>
+                            <tr>
+                                <th>پیش‌نیاز</th>
+                                <th>پاسخ صحیح</th>
+                                <th>سوالات تلاش شده</th>
+                                <th>درصد موفقیت</th>
+                                <th>منابع آموزشی</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            strengths.forEach(item => {
+                html += `
+                    <tr>
+                        <td>${item.prerequisite}</td>
+                        <td>${item.correct}</td>
+                        <td>${item.attempted}</td>
+                        <td><span class="badge bg-success">${item.success_rate}%</span></td>
+                        <td>${item.video_link ? `<a href="${item.video_link}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-play me-1"></i>مشاهده ویدیو</a>` : '<span class="text-muted">در دسترس نیست</span>'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+        }
+        
+        // Weaknesses section
+        if (weaknesses.length > 0) {
+            html += `
+                <h4 class="text-danger mb-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>نقاط ضعف و پیشنهادات بهبود
+                </h4>
+                <div class="table-responsive">
+                    <table class="table table-danger table-striped">
+                        <thead>
+                            <tr>
+                                <th>پیش‌نیاز</th>
+                                <th>پاسخ صحیح</th>
+                                <th>سوالات تلاش شده</th>
+                                <th>درصد موفقیت</th>
+                                <th>منابع آموزشی</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            weaknesses.forEach(item => {
+                const videoLink = item.video_link ? 
+                    `<a href="${item.video_link}" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-play me-1"></i>مشاهده ویدیو
+                    </a>` : 
+                    '<span class="text-muted">در دسترس نیست</span>';
+                
+                html += `
+                    <tr>
+                        <td>${item.prerequisite}</td>
+                        <td>${item.correct}</td>
+                        <td>${item.attempted}</td>
+                        <td><span class="badge bg-danger">${item.success_rate}%</span></td>
+                        <td>${videoLink}</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+        }
+        
+        html += '</div>';
+        return html;
     }
     
     hideForm() {
@@ -333,6 +458,57 @@ function showStudentForm() {
 
 function hideStudentForm() {
     document.getElementById('student-form').style.display = 'none';
+}
+
+// Download Results Function
+function downloadResults() {
+    // Get the results content
+    const resultsSection = document.getElementById('results-section');
+    const content = resultsSection.cloneNode(true);
+    
+    // Create a complete HTML document for download
+    const htmlContent = `
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>گزارش عملکرد - سیستم تحلیل ریاضی</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Vazir', Arial, sans-serif; background: #f8f9fa; }
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .print-date { color: #6c757d; font-size: 0.9em; }
+        @media print {
+            body { background: white; }
+            .btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="text-primary">گزارش عملکرد تحلیل ریاضی</h1>
+            <p class="print-date">تاریخ صدور: ${new Date().toLocaleDateString('fa-IR')}</p>
+        </div>
+        ${content.innerHTML}
+    </div>
+</body>
+</html>
+    `;
+    
+    // Create blob and download
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `گزارش-عملکرد-${new Date().toISOString().split('T')[0]}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
 
 // Math Keyboard Functions

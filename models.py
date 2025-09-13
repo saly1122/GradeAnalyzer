@@ -42,14 +42,13 @@ class StudentAnswer(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
-    question_id = db.Column(db.Integer, db.ForeignKey('questions.id'), nullable=False)
-    is_correct = db.Column(db.Integer, nullable=False)  # 1 for correct, 0 for incorrect
-    
-    # Relationships
-    question = db.relationship('Question', backref='answers', lazy=True)
+    prerequisite_name = db.Column(db.String(200), nullable=False)
+    student_answer = db.Column(db.String(500))
+    correct_answer = db.Column(db.String(500))
+    is_correct = db.Column(db.Integer, nullable=False)  # 1 for correct, 0 for incorrect, -1 for "don't know"
     
     def __repr__(self):
-        return f'<StudentAnswer {self.id}: Student {self.student_id}, Question {self.question_id}>'
+        return f'<StudentAnswer {self.id}: Student {self.student_id}, {self.prerequisite_name}>'
 
 class PrerequisiteVideo(db.Model):
     """Model for storing educational video links"""

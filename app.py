@@ -12,7 +12,14 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Create Flask app
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "your-secret-key-here")
+# Set secure secret key - generate random one for development
+import secrets
+session_secret = os.environ.get("SESSION_SECRET")
+if not session_secret:
+    # Generate a secure random secret for development
+    session_secret = secrets.token_hex(32)
+    logging.warning("SESSION_SECRET not set in environment. Using generated secret for development.")
+app.secret_key = session_secret
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Configure PostgreSQL database
@@ -528,8 +535,18 @@ def submit_answer():
         # Move to next prerequisite
         session['current_prerequisite_index'] = prerequisite_index + 1
         
-        # Save answer to database using Answer model (need to create this)
-        # For now, log the result
+        # Save answer to database
+        answer_value = 1 if is_correct else (-1 if is_dont_know else 0)
+        student_answer = StudentAnswer(
+            student_id=student_id,
+            prerequisite_name=current_prerequisite,
+            student_answer=answer,
+            correct_answer=str(correct_answer),
+            is_correct=answer_value
+        )
+        db.session.add(student_answer)
+        db.session.commit()
+        
         logging.info(f"Student {student_id} answered '{answer}' for {current_prerequisite}: {'correct' if is_correct else 'incorrect' if not is_dont_know else 'dont_know'}")
         
         return jsonify({
@@ -542,6 +559,87 @@ def submit_answer():
     except Exception as e:
         logging.error(f"Error submitting answer: {e}")
         return jsonify({'success': False, 'error': 'خطا در ثبت پاسخ'})
+
+@app.route('/api/get_results', methods=['GET'])
+def get_results():
+    """Get detailed student results with strengths/weaknesses analysis"""
+    try:
+        if 'student_id' not in session:
+            return jsonify({'success': False, 'error': 'جلسه یافت نشد'})
+        
+        student_id = session['student_id']
+        score = session.get('score', 0)
+        total = session.get('total_questions', 0)
+        
+        # Get all student answers for analysis
+        answers = StudentAnswer.query.filter_by(student_id=student_id).all()
+        
+        # Analyze strengths and weaknesses
+        strengths = []
+        weaknesses = []
+        
+        # Group answers by prerequisite
+        prerequisite_performance = {}
+        for answer in answers:
+            prereq = answer.prerequisite_name
+            if prereq not in prerequisite_performance:
+                prerequisite_performance[prereq] = {'correct': 0, 'total': 0, 'dont_know': 0}
+            
+            prerequisite_performance[prereq]['total'] += 1
+            if answer.is_correct == 1:
+                prerequisite_performance[prereq]['correct'] += 1
+            elif answer.is_correct == -1:
+                prerequisite_performance[prereq]['dont_know'] += 1
+        
+        # Determine strengths and weaknesses
+        for prereq, performance in prerequisite_performance.items():
+            total_answered = performance['total']
+            correct_answers = performance['correct']
+            dont_know_count = performance['dont_know']
+            
+            # Calculate success rate excluding "don't know" answers
+            # Only count answers where student actually attempted (correct or incorrect)
+            attempted_answers = total_answered - dont_know_count
+            
+            if attempted_answers > 0:
+                success_rate = correct_answers / attempted_answers
+                
+                # Get educational video link
+                video = PrerequisiteVideo.query.filter_by(prerequisite_name=prereq).first()
+                video_link = video.video_url if video else None
+                
+                result_item = {
+                    'prerequisite': prereq,
+                    'correct': correct_answers,
+                    'attempted': attempted_answers,
+                    'total': total_answered,
+                    'dont_know': dont_know_count,
+                    'success_rate': round(success_rate * 100, 1),
+                    'video_link': video_link
+                }
+                
+                # Consider as strength if success rate >= 70%
+                if success_rate >= 0.7:
+                    strengths.append(result_item)
+                else:
+                    weaknesses.append(result_item)
+        
+        # Calculate total attempted (excluding "don't know" answers)
+        total_attempted = len([a for a in answers if a.is_correct != -1])
+        
+        return jsonify({
+            'success': True,
+            'score': score,
+            'total': total,
+            'attempted': total_attempted,
+            'percentage': round((score / total_attempted * 100) if total_attempted > 0 else 0, 1),
+            'strengths': strengths,
+            'weaknesses': weaknesses
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting results: {e}")
+        return jsonify({'success': False, 'error': 'خطا در دریافت نتایج'})
 
 # Admin Routes
 @app.route('/admin/login', methods=['GET', 'POST'])
