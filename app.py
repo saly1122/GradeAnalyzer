@@ -40,8 +40,8 @@ if database_url:
         }
     }
 else:
-    # Fallback to SQLite file for development
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/mathboost.db'
+    # Fallback to SQLite in /tmp for serverless compatibility
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/mathboost.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database
@@ -393,20 +393,49 @@ def create_tables():
         if not Question.query.first():
             add_sample_questions()
 
-# Initialize database tables and sample data
-with app.app_context():
-    create_tables()
+# Database initialization function for lazy loading
+def init_db_if_needed():
+    """Initialize database tables and sample data on first request"""
+    try:
+        # Try a simple query to see if tables exist
+        PrerequisiteVideo.query.first()
+    except Exception:
+        # Tables don't exist, create them
+        db.create_all()
+        
+        # Add sample video links for all prerequisites if not exist
+        if not PrerequisiteVideo.query.first():
+            # Get all unique prerequisites from all grades
+            all_prerequisites = set()
+            for grade_prereqs in GRADE_PREREQUISITES.values():
+                all_prerequisites.update(grade_prereqs)
+            
+            # Create sample video entries for all prerequisites
+            for i, prerequisite in enumerate(sorted(all_prerequisites), 1):
+                video = PrerequisiteVideo(
+                    prerequisite_name=prerequisite, 
+                    video_url=f"https://example.com/video{i}"
+                )
+                db.session.add(video)
+            
+            db.session.commit()
+            
+            # Add sample questions for testing if no questions exist
+            if not Question.query.first():
+                add_sample_questions()
 
 # Student Routes
 @app.route('/')
 def index():
     """Main assessment page for students"""
+    init_db_if_needed()
     return render_template('index.html')
 
 @app.route('/api/start_session', methods=['POST'])
 def start_session():
     """Start a new student assessment session"""
     try:
+        init_db_if_needed()
         data = request.get_json()
         student_name = data.get('name', '').strip()
         student_grade = data.get('grade', '').strip()
@@ -645,6 +674,7 @@ def get_results():
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     """Admin login page"""
+    init_db_if_needed()
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
