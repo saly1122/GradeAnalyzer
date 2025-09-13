@@ -16,7 +16,7 @@ app.secret_key = os.environ.get("SESSION_SECRET", "your-secret-key-here")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Configure SQLite database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mathboost.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database
@@ -29,7 +29,7 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 # List of prerequisites for the assessment
 PREREQUISITES = [
     "جمع و تفریق اعداد طبیعی",
-    "ضرب و تقسیم اعداد طبیعی", 
+    "ضرب و تقسیم اعداد طبیعی",  
     "کسرها و اعمال روی کسرها",
     "اعشار و تبدیل کسر به اعشار",
     "درصد و کاربردهای آن"
@@ -119,9 +119,9 @@ def get_question():
         
         # Try to get existing question with best discrimination index
         question = Question.query.filter_by(prerequisite_name=prerequisite)\
-                                .order_by(Question.avg_discrimination_index.desc().nullslast(),
-                                         Question.times_used.asc())\
-                                .first()
+                                 .order_by(Question.avg_discrimination_index.desc().nullslast(),
+                                          Question.times_used.asc())\
+                                 .first()
         
         # If no question exists, generate new ones
         if not question:
