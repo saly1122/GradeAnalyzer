@@ -74,7 +74,10 @@ class StudentAssessment {
             if (data.success) {
                 this.hideForm();
                 this.showQuestionSection();
-                this.getNextQuestion(); 
+                // ✅ یک تأخیر کوتاه اضافه شده تا نمایش صفحه تضمین شود
+                setTimeout(() => {
+                    this.getNextQuestion(); 
+                }, 100); 
             } else {
                 this.showAlert(data.error || 'خطا در شروع جلسه', 'danger');
             }
