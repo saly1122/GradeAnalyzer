@@ -34,8 +34,8 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 34151
-externalPort = 3000
+localPort = 39863
+externalPort = 3001
 
 [agent]
 integrations = ["python_gemini==1.0.0"]

@@ -416,3 +416,110 @@ h3, h4 {
     font-size: 1.25rem;
     font-weight: 400;
 }
+
+/* Math Keyboard Styles */
+.math-keyboard {
+    direction: ltr;
+}
+
+.math-btn {
+    min-width: 40px;
+    height: 40px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    margin: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid transparent;
+}
+
+.math-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    border-color: var(--primary-color);
+}
+
+.math-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+#math-keyboard-panel {
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--background-card) 0%, #f8f9fa 100%);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#keyboard-toggle {
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    border: 2px solid var(--border-color);
+}
+
+#keyboard-toggle:hover {
+    transform: scale(1.05);
+    border-color: var(--primary-color);
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* Different color schemes for math button groups */
+.math-btn.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.math-btn.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.math-btn.btn-outline-info {
+    color: var(--info-color);
+    border-color: var(--info-color);
+}
+
+.math-btn.btn-outline-info:hover {
+    background-color: var(--info-color);
+    color: white;
+}
+
+.math-btn.btn-outline-success {
+    color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.math-btn.btn-outline-success:hover {
+    background-color: var(--success-color);
+    color: white;
+}
+
+/* Responsive math keyboard */
+@media (max-width: 768px) {
+    .math-btn {
+        min-width: 35px;
+        height: 35px;
+        font-size: 14px;
+        margin: 1px;
+    }
+    
+    #math-keyboard-panel {
+        padding: 15px !important;
+    }
+}

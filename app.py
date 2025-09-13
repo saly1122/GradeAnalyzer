@@ -18,7 +18,20 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 # Configure PostgreSQL database
 database_url = os.environ.get('DATABASE_URL')
 if database_url:
+    # Fix SSL connection issues for PostgreSQL
+    if '?' not in database_url:
+        database_url += '?sslmode=prefer'
+    elif 'sslmode=' not in database_url:
+        database_url += '&sslmode=prefer'
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_pre_ping': True,
+        'pool_recycle': 300,
+        'connect_args': {
+            'sslmode': 'prefer',
+            'connect_timeout': 10
+        }
+    }
 else:
     # Fallback to SQLite file for development
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/mathboost.db'
@@ -31,34 +44,347 @@ db.init_app(app)
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 
-# List of prerequisites for the assessment
-PREREQUISITES = [
-    "جمع و تفریق اعداد طبیعی",
-    "ضرب و تقسیم اعداد طبیعی",  
-    "کسرها و اعمال روی کسرها",
-    "اعشار و تبدیل کسر به اعشار",
-    "درصد و کاربردهای آن"
-]
+# Grade-specific prerequisites for Iranian curriculum (Grades 7-12)
+GRADE_PREREQUISITES = {
+    "ششم": [
+        "جمع و تفریق اعداد طبیعی",
+        "ضرب و تقسیم اعداد طبیعی", 
+        "کسرها و اعمال روی کسرها",
+        "اعشار و تبدیل کسر به اعشار",
+        "درصد و کاربردهای آن"
+    ],
+    "هفتم": [
+        "جمع و تفریق اعداد طبیعی",
+        "ضرب و تقسیم اعداد طبیعی",
+        "کسرها و اعمال روی کسرها", 
+        "اعشار و تبدیل کسر به اعشار",
+        "درصد و کاربردهای آن",
+        "اعداد صحیح و عملیات روی آنها",
+        "اعداد گویا و مقایسه آنها",
+        "توان و ریشه دوم",
+        "عبارت‌های جبری ساده",
+        "معادلات درجه یک"
+    ],
+    "هشتم": [
+        "جمع و تفریق اعداد طبیعی",
+        "ضرب و تقسیم اعداد طبیعی",
+        "کسرها و اعمال روی کسرها",
+        "اعشار و تبدیل کسر به اعشار", 
+        "درصد و کاربردهای آن",
+        "اعداد صحیح و عملیات روی آنها",
+        "اعداد گویا و مقایسه آنها",
+        "توان و ریشه دوم",
+        "عبارت‌های جبری ساده",
+        "معادلات درجه یک",
+        "عملیات روی عبارت‌های جبری",
+        "معادلات دو مجهوله",
+        "نسبت و تناسب",
+        "هندسه مثلث",
+        "مساحت اشکال هندسی"
+    ],
+    "نهم": [
+        "جمع و تفریق اعداد طبیعی",
+        "ضرب و تقسیم اعداد طبیعی",
+        "کسرها و اعمال روی کسرها",
+        "اعشار و تبدیل کسر به اعشار",
+        "درصد و کاربردهای آن", 
+        "اعداد صحیح و عملیات روی آنها",
+        "اعداد گویا و مقایسه آنها",
+        "توان و ریشه دوم",
+        "عبارت‌های جبری ساده",
+        "معادلات درجه یک",
+        "عملیات روی عبارت‌های جبری",
+        "معادلات دو مجهوله", 
+        "نسبت و تناسب",
+        "هندسه مثلث",
+        "مساحت اشکال هندسی",
+        "اعداد حقیقی",
+        "رادیکال و عملیات روی آن",
+        "عبارت‌های جبری پیچیده",
+        "معادلات درجه دو",
+        "تابع و نمودار"
+    ],
+    "دهم": [
+        "جمع و تفریق اعداد طبیعی",
+        "ضرب و تقسیم اعداد طبیعی",
+        "کسرها و اعمال روی کسرها",
+        "اعشار و تبدیل کسر به اعشار",
+        "درصد و کاربردهای آن",
+        "اعداد صحیح و عملیات روی آنها", 
+        "اعداد گویا و مقایسه آنها",
+        "توان و ریشه دوم",
+        "عبارت‌های جبری ساده",
+        "معادلات درجه یک",
+        "عملیات روی عبارت‌های جبری",
+        "معادلات دو مجهوله",
+        "نسبت و تناسب",
+        "هندسه مثلث",
+        "مساحت اشکال هندسی",
+        "اعداد حقیقی",
+        "رادیکال و عملیات روی آن",
+        "عبارت‌های جبری پیچیده", 
+        "معادلات درجه دو",
+        "تابع و نمودار",
+        "مثلثات پایه",
+        "لگاریتم",
+        "دنباله و سری",
+        "هندسه تحلیلی",
+        "احتمال و آمار پایه"
+    ],
+    "یازدهم": [
+        "جمع و تفریق اعداد طبیعی",
+        "ضرب و تقسیم اعداد طبیعی", 
+        "کسرها و اعمال روی کسرها",
+        "اعشار و تبدیل کسر به اعشار",
+        "درصد و کاربردهای آن",
+        "اعداد صحیح و عملیات روی آنها",
+        "اعداد گویا و مقایسه آنها",
+        "توان و ریشه دوم",
+        "عبارت‌های جبری ساده",
+        "معادلات درجه یک",
+        "عملیات روی عبارت‌های جبری",
+        "معادلات دو مجهوله",
+        "نسبت و تناسب",
+        "هندسه مثلث",
+        "مساحت اشکال هندسی",
+        "اعداد حقیقی",
+        "رادیکال و عملیات روی آن",
+        "عبارت‌های جبری پیچیده",
+        "معادلات درجه دو",
+        "تابع و نمودار",
+        "مثلثات پایه",
+        "لگاریتم",
+        "دنباله و سری",
+        "هندسه تحلیلی",
+        "احتمال و آمار پایه",
+        "مثلثات پیشرفته",
+        "حد و پیوستگی",
+        "مشتق",
+        "کاربردهای مشتق",
+        "انتگرال پایه"
+    ],
+    "دوازدهم": [
+        "جمع و تفریق اعداد طبیعی",
+        "ضرب و تقسیم اعداد طبیعی",
+        "کسرها و اعمال روی کسرها",
+        "اعشار و تبدیل کسر به اعشار",
+        "درصد و کاربردهای آن",
+        "اعداد صحیح و عملیات روی آنها",
+        "اعداد گویا و مقایسه آنها",
+        "توان و ریشه دوم",
+        "عبارت‌های جبری ساده",
+        "معادلات درجه یک",
+        "عملیات روی عبارت‌های جبری",
+        "معادلات دو مجهوله",
+        "نسبت و تناسب",
+        "هندسه مثلث",
+        "مساحت اشکال هندسی",
+        "اعداد حقیقی",
+        "رادیکال و عملیات روی آن",
+        "عبارت‌های جبری پیچیده",
+        "معادلات درجه دو",
+        "تابع و نمودار",
+        "مثلثات پایه",
+        "لگاریتم",
+        "دنباله و سری", 
+        "هندسه تحلیلی",
+        "احتمال و آمار پایه",
+        "مثلثات پیشرفته",
+        "حد و پیوستگی",
+        "مشتق",
+        "کاربردهای مشتق",
+        "انتگرال پایه",
+        "انتگرال تعیین",
+        "معادلات دیفرانسیل ساده",
+        "آمار و احتمال پیشرفته",
+        "ترکیبات و جایگشت",
+        "هندسه فضایی"
+    ]
+}
+
+def get_prerequisites_for_grade(grade):
+    """Get prerequisites for a specific grade"""
+    return GRADE_PREREQUISITES.get(grade, [])
+
+def generate_questions(prerequisite_name, count=1):
+    """Generate questions for a specific prerequisite"""
+    try:
+        # Sample questions data
+        sample_questions_data = [
+            # Basic arithmetic - grade 6-7 level
+            {
+                "prerequisite": "جمع و تفریق اعداد طبیعی",
+                "text": "حاصل جمع ۲۵ + ۳۷ چقدر است؟",
+                "answer": "۶۲"
+            },
+            {
+                "prerequisite": "جمع و تفریق اعداد طبیعی",
+                "text": "حاصل تفریق ۵۰ - ۲۳ چقدر است؟",
+                "answer": "۲۷"
+            },
+            {
+                "prerequisite": "ضرب و تقسیم اعداد طبیعی",
+                "text": "حاصل ضرب ۸ × ۹ چقدر است؟",
+                "answer": "۷۲"
+            },
+            {
+                "prerequisite": "ضرب و تقسیم اعداد طبیعی",
+                "text": "حاصل تقسیم ۸۱ ÷ ۹ چقدر است؟",
+                "answer": "۹"
+            },
+            {
+                "prerequisite": "کسرها و اعمال روی کسرها",
+                "text": "حاصل ۱/۲ + ۱/۴ چقدر است؟",
+                "answer": "۳/۴"
+            },
+            {
+                "prerequisite": "درصد و کاربردهای آن",
+                "text": "۲۵ درصد از ۸۰ چقدر است؟",
+                "answer": "۲۰"
+            },
+            {
+                "prerequisite": "اعداد صحیح و عملیات روی آنها",
+                "text": "حاصل (-۵) + (۳) چقدر است؟",
+                "answer": "-۲"
+            },
+            {
+                "prerequisite": "معادلات درجه یک",
+                "text": "مقدار x در معادله ۲x + ۵ = ۱۱ چقدر است؟",
+                "answer": "۳"
+            },
+            {
+                "prerequisite": "معادلات درجه دو",
+                "text": "ریشه‌های معادله x² - 5x + 6 = 0 کدام هستند؟",
+                "answer": "۲ و ۳"
+            },
+            {
+                "prerequisite": "توابع و نمودار",
+                "text": "اگر f(x) = 2x + 1 باشد، f(3) چقدر است؟",
+                "answer": "۷"
+            }
+        ]
+        
+        # Filter questions for the specific prerequisite
+        matching_questions = [q for q in sample_questions_data if q["prerequisite"] == prerequisite_name]
+        
+        if not matching_questions:
+            # Fallback: return a generic question
+            return [{
+                "text": f"سوال نمونه برای {prerequisite_name}. لطفا یک عدد وارد کنید:",
+                "answer": "۱"
+            }]
+        
+        # Return the requested number of questions (cycling if needed)
+        result = []
+        for i in range(count):
+            result.append(matching_questions[i % len(matching_questions)])
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Error generating questions for {prerequisite_name}: {e}")
+        # Return a fallback question
+        return [{
+            "text": f"سوال نمونه برای {prerequisite_name}. لطفا عدد ۱ را وارد کنید:",
+            "answer": "۱"
+        }]
+
+# For backward compatibility
+PREREQUISITES = GRADE_PREREQUISITES.get("هفتم", [])
+
+def add_sample_questions():
+    """Add sample questions for testing purposes"""
+    sample_questions = [
+        # Basic arithmetic - grade 6-7 level
+        {
+            "prerequisite_name": "جمع و تفریق اعداد طبیعی",
+            "difficulty_level": "easy",
+            "question_text": "حاصل جمع ۲۵ + ۳۷ چقدر است؟",
+            "correct_answer": "۶۲"
+        },
+        {
+            "prerequisite_name": "ضرب و تقسیم اعداد طبیعی",
+            "difficulty_level": "easy", 
+            "question_text": "حاصل ضرب ۸ × ۹ چقدر است؟",
+            "correct_answer": "۷۲"
+        },
+        {
+            "prerequisite_name": "کسرها و اعمال روی کسرها",
+            "difficulty_level": "medium",
+            "question_text": "حاصل $\\frac{1}{2} + \\frac{1}{4}$ چقدر است؟",
+            "correct_answer": "۳/۴"
+        },
+        {
+            "prerequisite_name": "درصد و کاربردهای آن",
+            "difficulty_level": "medium",
+            "question_text": "۲۵ درصد از ۸۰ چقدر است؟",
+            "correct_answer": "۲۰"
+        },
+        # Intermediate level - grade 8-9
+        {
+            "prerequisite_name": "اعداد صحیح و عملیات روی آنها",
+            "difficulty_level": "medium",
+            "question_text": "حاصل (-۵) + (۳) چقدر است؟",
+            "correct_answer": "-۲"
+        },
+        {
+            "prerequisite_name": "معادلات درجه یک", 
+            "difficulty_level": "medium",
+            "question_text": "مقدار x در معادله ۲x + ۵ = ۱۱ چقدر است؟",
+            "correct_answer": "۳"
+        },
+        # Advanced level - grade 10-12
+        {
+            "prerequisite_name": "معادلات درجه دو",
+            "difficulty_level": "hard",
+            "question_text": "ریشه‌های معادله $x^2 - 5x + 6 = 0$ کدام هستند؟",
+            "correct_answer": "۲ و ۳"
+        },
+        {
+            "prerequisite_name": "تابع و نمودار",
+            "difficulty_level": "hard", 
+            "question_text": "اگر $f(x) = 2x + 1$ باشد، مقدار $f(3)$ چقدر است؟",
+            "correct_answer": "۷"
+        }
+    ]
+    
+    for q_data in sample_questions:
+        question = Question(
+            prerequisite_name=q_data["prerequisite_name"],
+            difficulty_level=q_data["difficulty_level"],
+            question_text=q_data["question_text"],
+            correct_answer=q_data["correct_answer"],
+            times_used=0
+        )
+        db.session.add(question)
+    
+    db.session.commit()
+    logging.info(f"Added {len(sample_questions)} sample questions for testing")
 
 def create_tables():
     """Initialize database tables and sample data"""
     db.create_all()
     
-    # Add sample video links if not exist
+    # Add sample video links for all prerequisites if not exist
     if not PrerequisiteVideo.query.first():
-        sample_videos = [
-            ("جمع و تفریق اعداد طبیعی", "https://example.com/video1"),
-            ("ضرب و تقسیم اعداد طبیعی", "https://example.com/video2"),
-            ("کسرها و اعمال روی کسرها", "https://example.com/video3"),
-            ("اعشار و تبدیل کسر به اعشار", "https://example.com/video4"),
-            ("درصد و کاربردهای آن", "https://example.com/video5")
-        ]
+        # Get all unique prerequisites from all grades
+        all_prerequisites = set()
+        for grade_prereqs in GRADE_PREREQUISITES.values():
+            all_prerequisites.update(grade_prereqs)
         
-        for name, url in sample_videos:
-            video = PrerequisiteVideo(prerequisite_name=name, video_url=url)
+        # Create sample video entries for all prerequisites
+        for i, prerequisite in enumerate(sorted(all_prerequisites), 1):
+            video = PrerequisiteVideo(
+                prerequisite_name=prerequisite, 
+                video_url=f"https://example.com/video{i}"
+            )
             db.session.add(video)
         
         db.session.commit()
+        
+        # Add sample questions for testing if no questions exist
+        if not Question.query.first():
+            add_sample_questions()
 
 # Initialize database tables and sample data
 with app.app_context():
@@ -92,9 +418,13 @@ def start_session():
         
         # Store session data
         session['student_id'] = student.id
+        session['student_grade'] = student_grade
         session['current_prerequisite_index'] = 0
         session['score'] = 0
         session['total_questions'] = 0
+        
+        # Debug logging for session creation
+        logging.info(f"Session created for student {student.id}: {dict(session)}")
         
         return jsonify({'success': True, 'student_id': student.id})
         
@@ -106,13 +436,22 @@ def start_session():
 def get_question():
     """Get next question for student"""
     try:
+        # Debug logging for session
+        logging.debug(f"Session contents: {dict(session)}")
+        logging.debug(f"Student ID in session: {'student_id' in session}")
+        
         if 'student_id' not in session:
+            logging.error("Session does not contain student_id")
             return jsonify({'success': False, 'error': 'جلسه یافت نشد'})
         
         prerequisite_index = session.get('current_prerequisite_index', 0)
+        student_grade = session.get('student_grade', 'هفتم')
+        
+        # Get prerequisites for student's grade
+        grade_prerequisites = get_prerequisites_for_grade(student_grade)
         
         # Check if assessment is complete
-        if prerequisite_index >= len(PREREQUISITES):
+        if prerequisite_index >= len(grade_prerequisites):
             return jsonify({
                 'success': True, 
                 'completed': True,
@@ -120,38 +459,22 @@ def get_question():
                 'total': session.get('total_questions', 0)
             })
         
-        prerequisite = PREREQUISITES[prerequisite_index]
+        prerequisite = grade_prerequisites[prerequisite_index]
         
-        # Try to get existing question with best discrimination index
-        question = Question.query.filter_by(prerequisite_name=prerequisite)\
-                                 .order_by(Question.avg_discrimination_index.desc().nullslast(),
-                                          Question.times_used.asc())\
-                                 .first()
+        # Generate question for current prerequisite using new system
+        logging.info(f"Generating new questions for: {prerequisite}")
+        questions = generate_questions(prerequisite, 1)
         
-        # If no question exists, generate new ones
-        if not question:
-            logging.info(f"Generating new questions for: {prerequisite}")
-            success = generate_questions_from_ai(prerequisite)
-            if success:
-                question = Question.query.filter_by(prerequisite_name=prerequisite).first()
-        
-        if not question:
+        if not questions:
             return jsonify({'success': False, 'error': 'خطا در تولید سوال'})
         
-        # Update usage count
-        question.times_used += 1
-        db.session.commit()
-        
-        # Store current question in session
-        session['current_question_id'] = question.id
-        session['total_questions'] = session.get('total_questions', 0) + 1
+        question = questions[0]
         
         return jsonify({
             'success': True,
             'question': {
-                'id': question.id,
-                'text': question.question_text,
-                'prerequisite': question.prerequisite_name
+                'text': question['text'],
+                'prerequisite': prerequisite
             }
         })
         
@@ -163,43 +486,57 @@ def get_question():
 def submit_answer():
     """Submit student answer"""
     try:
-        if 'student_id' not in session or 'current_question_id' not in session:
+        if 'student_id' not in session:
             return jsonify({'success': False, 'error': 'جلسه یافت نشد'})
         
         data = request.get_json()
         answer = data.get('answer', '').strip()
         
+        if not answer:
+            return jsonify({'success': False, 'error': 'لطفا پاسخ خود را وارد کنید'})
+        
         student_id = session['student_id']
-        question_id = session['current_question_id']
+        prerequisite_index = session.get('current_prerequisite_index', 0)
+        student_grade = session.get('student_grade', 'هفتم')
         
-        # Get question
-        question = Question.query.get(question_id)
-        if not question:
-            return jsonify({'success': False, 'error': 'سوال یافت نشد'})
+        # Get current question info
+        current_prerequisites = get_prerequisites_for_grade(student_grade)
+        if prerequisite_index >= len(current_prerequisites):
+            return jsonify({'success': False, 'error': 'آزمون تمام شده است'})
         
-        # Check if answer is correct
-        is_correct = answer.lower() == question.correct_answer.lower()
+        current_prerequisite = current_prerequisites[prerequisite_index]
         
-        # Save student answer
-        student_answer = StudentAnswer(
-            student_id=student_id,
-            question_id=question_id,
-            is_correct=1 if is_correct else 0
-        )
-        db.session.add(student_answer)
-        db.session.commit()
+        # Generate or get question for current prerequisite
+        questions = generate_questions(current_prerequisite, 1)
+        if not questions:
+            return jsonify({'success': False, 'error': 'خطا در تولید سوال'})
         
-        # Update session score
+        question = questions[0]
+        correct_answer = question['answer']
+        
+        # Check for "don't know" answer
+        is_dont_know = answer == 'بلد نیستم'
+        
+        # Check if answer is correct (simple string comparison for now)
+        is_correct = False if is_dont_know else answer.lower().strip() == str(correct_answer).lower().strip()
+        
+        # Update session score (don't count "don't know" as wrong)
+        session['total_questions'] = session.get('total_questions', 0) + 1
         if is_correct:
             session['score'] = session.get('score', 0) + 1
         
         # Move to next prerequisite
-        session['current_prerequisite_index'] = session.get('current_prerequisite_index', 0) + 1
+        session['current_prerequisite_index'] = prerequisite_index + 1
+        
+        # Save answer to database using Answer model (need to create this)
+        # For now, log the result
+        logging.info(f"Student {student_id} answered '{answer}' for {current_prerequisite}: {'correct' if is_correct else 'incorrect' if not is_dont_know else 'dont_know'}")
         
         return jsonify({
             'success': True,
             'correct': is_correct,
-            'correct_answer': question.correct_answer
+            'correct_answer': str(correct_answer),
+            'dont_know': is_dont_know
         })
         
     except Exception as e:

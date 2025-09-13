@@ -25,6 +25,12 @@ def generate_questions_from_ai(prerequisite_name: str) -> bool:
     Generate questions using Gemini AI for a specific prerequisite
     Returns True if successful, False otherwise
     """
+    # Check if API key is available
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key or api_key == "your-api-key-here":
+        logging.warning(f"No valid Gemini API key found. Skipping AI question generation for {prerequisite_name}")
+        return False
+    
     try:
         # Create detailed prompt in Persian
         prompt = f"""

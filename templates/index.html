@@ -70,12 +70,13 @@
                                 <label for="student-grade" class="form-label">پایه تحصیلی</label>
                                 <select class="form-select" id="student-grade" required>
                                     <option value="">انتخاب کنید</option>
-                                    <option value="چهارم">چهارم</option>
-                                    <option value="پنجم">پنجم</option>
                                     <option value="ششم">ششم</option>
                                     <option value="هفتم">هفتم</option>
                                     <option value="هشتم">هشتم</option>
                                     <option value="نهم">نهم</option>
+                                    <option value="دهم">دهم</option>
+                                    <option value="یازدهم">یازدهم</option>
+                                    <option value="دوازدهم">دوازدهم</option>
                                 </select>
                             </div>
                         </div>
@@ -115,6 +116,53 @@
                                 <label for="student-answer" class="form-label">پاسخ شما:</label>
                                 <input type="text" class="form-control form-control-lg" id="student-answer" 
                                        placeholder="پاسخ خود را وارد کنید" required>
+                                
+                                <!-- Math Keyboard -->
+                                <div class="math-keyboard mt-2">
+                                    <div class="mb-2">
+                                        <small class="text-muted">کیبورد ریاضی:</small>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary ms-2" 
+                                                onclick="toggleMathKeyboard()" id="keyboard-toggle">
+                                            <i class="fas fa-keyboard"></i> نمایش کیبورد
+                                        </button>
+                                    </div>
+                                    <div id="math-keyboard-panel" style="display: none;" class="p-3 border rounded bg-light">
+                                        <div class="row g-1 mb-2">
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-primary btn-sm math-btn" data-symbol="+">+</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-primary btn-sm math-btn" data-symbol="-">-</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-primary btn-sm math-btn" data-symbol="×">×</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-primary btn-sm math-btn" data-symbol="÷">÷</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-primary btn-sm math-btn" data-symbol="=">=</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-primary btn-sm math-btn" data-symbol="≠">≠</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-primary btn-sm math-btn" data-symbol="<"><</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-primary btn-sm math-btn" data-symbol=">">></button></div>
+                                        </div>
+                                        <div class="row g-1 mb-2">
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-info btn-sm math-btn" data-symbol="√">√</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-info btn-sm math-btn" data-symbol="²">²</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-info btn-sm math-btn" data-symbol="³">³</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-info btn-sm math-btn" data-symbol="^">^</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-info btn-sm math-btn" data-symbol="∞">∞</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-info btn-sm math-btn" data-symbol="π">π</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-info btn-sm math-btn" data-symbol="α">α</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-info btn-sm math-btn" data-symbol="β">β</button></div>
+                                        </div>
+                                        <div class="row g-1 mb-2">
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-success btn-sm math-btn" data-symbol="/">/</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-success btn-sm math-btn" data-symbol="(">(</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-success btn-sm math-btn" data-symbol=")">)</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-success btn-sm math-btn" data-symbol="[">[</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-success btn-sm math-btn" data-symbol="]">]</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-success btn-sm math-btn" data-symbol="|">|</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-success btn-sm math-btn" data-symbol="°">°</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-success btn-sm math-btn" data-symbol="%">%</button></div>
+                                        </div>
+                                        <div class="row g-1">
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-danger btn-sm" onclick="clearAnswer()">پاک کردن</button></div>
+                                            <div class="col-auto"><button type="button" class="btn btn-outline-warning btn-sm" onclick="dontKnowAnswer()">بلد نیستم</button></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <button type="submit" class="btn btn-success btn-lg w-100">

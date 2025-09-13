@@ -47,6 +47,36 @@ class StudentAssessment {
                 }
             });
         }
+        
+        // Math keyboard buttons
+        this.initializeMathKeyboard();
+    }
+    
+    initializeMathKeyboard() {
+        // Add event listeners to all math symbol buttons
+        const mathButtons = document.querySelectorAll('.math-btn');
+        mathButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const symbol = e.currentTarget.dataset.symbol;
+                this.insertSymbol(symbol);
+            });
+        });
+    }
+    
+    insertSymbol(symbol) {
+        const answerInput = document.getElementById('student-answer');
+        if (answerInput) {
+            const cursorPos = answerInput.selectionStart;
+            const textBefore = answerInput.value.substring(0, cursorPos);
+            const textAfter = answerInput.value.substring(answerInput.selectionEnd);
+            
+            answerInput.value = textBefore + symbol + textAfter;
+            answerInput.focus();
+            
+            // Set cursor position after inserted symbol
+            const newPos = cursorPos + symbol.length;
+            answerInput.setSelectionRange(newPos, newPos);
+        }
     }
     
     async startSession() {
@@ -159,7 +189,7 @@ class StudentAssessment {
             const data = await response.json();
             
             if (data.success) {
-                this.showFeedback(data.correct, data.correct_answer, answer);
+                this.showFeedback(data.correct, data.correct_answer, answer, data.dont_know);
                 this.questionNumber++;
                 this.isWaitingForNext = true;
             } else {
@@ -175,13 +205,23 @@ class StudentAssessment {
         }
     }
     
-    showFeedback(isCorrect, correctAnswer, userAnswer) {
+    showFeedback(isCorrect, correctAnswer, userAnswer, isDontKnow = false) {
         const feedbackSection = document.getElementById('feedback-section');
         const feedbackContent = document.getElementById('feedback-content');
         
         let feedbackHtml = '';
         
-        if (isCorrect) {
+        if (isDontKnow) {
+            feedbackHtml = `
+                <div class="text-warning">
+                    <i class="fas fa-question-circle fa-3x mb-3"></i>
+                    <h4>نگران نباشید! نداشتن اطلاع نشانه صداقت است</h4>
+                    <p class="mb-2">شما گفتید: <strong class="text-warning">بلد نیستم</strong></p>
+                    <p class="mb-0">پاسخ صحیح: <strong class="text-success">${correctAnswer}</strong></p>
+                    <small class="text-muted mt-2 d-block">این سوال در تحلیل نهایی تأثیر منفی نخواهد داشت</small>
+                </div>
+            `;
+        } else if (isCorrect) {
             feedbackHtml = `
                 <div class="text-success">
                     <i class="fas fa-check-circle fa-3x mb-3"></i>
@@ -293,6 +333,36 @@ function showStudentForm() {
 
 function hideStudentForm() {
     document.getElementById('student-form').style.display = 'none';
+}
+
+// Math Keyboard Functions
+function toggleMathKeyboard() {
+    const panel = document.getElementById('math-keyboard-panel');
+    const button = document.getElementById('keyboard-toggle');
+    
+    if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        button.innerHTML = '<i class="fas fa-keyboard"></i> مخفی کردن کیبورد';
+    } else {
+        panel.style.display = 'none';
+        button.innerHTML = '<i class="fas fa-keyboard"></i> نمایش کیبورد';
+    }
+}
+
+function clearAnswer() {
+    const answerInput = document.getElementById('student-answer');
+    if (answerInput) {
+        answerInput.value = '';
+        answerInput.focus();
+    }
+}
+
+function dontKnowAnswer() {
+    const answerInput = document.getElementById('student-answer');
+    if (answerInput) {
+        answerInput.value = 'بلد نیستم';
+        answerInput.focus();
+    }
 }
 
 // Initialize when DOM is loaded
